@@ -55,6 +55,92 @@ tabernaculo list
 tabernaculo link --cli opencode --project . --skill drizzle
 ```
 
+## Ejemplos de uso
+
+### Importar skills
+
+```bash
+# desde un repo de GitHub (atajo owner/repo)
+tabernaculo import --from wcervini/my-skill
+
+# desde una URL de GitHub, una rama concreta y una subcarpeta
+tabernaculo import --from https://github.com/org/skills-repo --ref main --path skills/drizzle
+
+# desde una carpeta local (manda el frontmatter name de SKILL.md)
+tabernaculo import --from ~/src/my-skill-folder
+
+# desde un .md suelto (se envuelve como SKILL.md)
+tabernaculo import --from ~/notes/awesome-skill.md
+
+# renombrar al importar (p. ej. si el nombre ya existe en el store)
+tabernaculo import --from ~/src/my-skill-folder --name my-skill-2
+```
+
+Un repo con varias skills abre un **menú numerado** en terminal interactiva (sin TTY mantiene el error sugiriendo `--path`):
+
+```
+$ tabernaculo import --from org/multi-skill-repo
+Skills encontradas en el origen:
+  1) alpha
+  2) beta
+Elige número o nombre: 2
+ok: beta -> ~/.skills/beta
+```
+
+### Importar en lote con `scan`
+
+```
+$ tabernaculo scan --dir ~/src/skills-collection
+Skills detectadas:
+  1) drizzle [carpeta]
+  2) zod [carpeta]
+  3) my-notes [.md]
+Elige números (ej. 1,3 o 1-3, 'all' para todas): 1-2
+ok: drizzle -> ~/.skills/drizzle
+ok: zod -> ~/.skills/zod
+resumen: 2 ok, 0 fallos
+```
+
+```bash
+# sin preguntas: importa todo
+tabernaculo scan --dir ~/src/skills-collection --all
+```
+
+### Enlazar skills a proyectos
+
+```bash
+# selector interactivo si omites --skill
+tabernaculo link --cli opencode --project .
+# Skills disponibles:
+#   1) drizzle
+#   2) zod
+# Elige número: 1
+
+# la misma skill, enlazada a varios agent-CLIs
+tabernaculo link --cli claude --project ~/apps/api --skill drizzle
+tabernaculo link --cli codex --legacy --project ~/apps/api --skill drizzle
+
+# reemplaza un enlace existente/incorrecto
+tabernaculo link --cli opencode --project . --skill drizzle --force
+```
+
+### Gestionar el store
+
+```bash
+tabernaculo list                      # todo el store
+tabernaculo list --cli codex          # solo skills importadas con ese hint
+
+tabernaculo unlink --cli opencode --project . --skill drizzle
+tabernaculo remove --skill old-skill  # (alias: rm)
+```
+
+### Apuntar el store a otra carpeta
+
+```bash
+tabernaculo config                    # store efectivo, origen y archivo de config
+tabernaculo config --set ~/.skills    # persiste la ruta del store en config.json
+```
+
 ## Comandos
 
 | Comando | Descripción |
