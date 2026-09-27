@@ -24,20 +24,123 @@ Escrito en **TypeScript sobre Bun**, compilado a un **binario único**. Sin depe
 
 ## Instalación
 
+Hay varias formas de conseguir `tabernaculo` — elige la que mejor te venga:
+
+| Método | Comando | Runtime necesario |
+|---|---|---|
+| **npm** (global) | `npm install -g tabernaculo` | Bun |
+| **npx** (sin instalar) | `npx tabernaculo ...` | Bun |
+| **Binario compilado** (GitHub Releases) | descarga según plataforma | ninguno (standalone) |
+| **Desde el código fuente** | ver más abajo | Bun + git |
+
+> El store y su config (`~/.config/tabernaculo/config.json`) viven en tu carpeta de usuario, así que persisten con cualquier método.
+
+### 1) npm (instalación global)
+
+```bash
+npm install -g tabernaculo
+```
+
+El comando `tabernaculo` queda en tu `PATH`. Requiere **Bun** en runtime (el entrypoint se ejecuta con Bun). También puedes instalarlo con Bun:
+
+```bash
+bun install -g tabernaculo
+```
+
+### 2) npx (ejecutar sin instalar)
+
+```bash
+npx tabernaculo <comando>        # p. ej. npx tabernaculo list
+```
+
+Sin instalación global — cada llamada descarga el paquete. También requiere **Bun**. Añade `-y` para saltar el prompt de instalación.
+
+### 3) Binario compilado (no necesita Bun)
+
+Binarios standalone para cada plataforma en [GitHub Releases](https://github.com/wcervini/tabernaculo/releases). Esta URL apunta siempre a la última versión:
+
+```
+https://github.com/wcervini/tabernaculo/releases/latest/download/<asset>
+```
+
+| Plataforma | Asset |
+|---|---|
+| Linux x64 | `tabernaculo-linux-x64` |
+| Linux arm64 | `tabernaculo-linux-arm64` |
+| macOS Intel | `tabernaculo-darwin-x64` |
+| macOS Apple Silicon | `tabernaculo-darwin-arm64` |
+| Windows x64 | `tabernaculo-windows-x64.exe` |
+| Windows arm64 | `tabernaculo-windows-arm64.exe` |
+
+**Linux (x64 / arm64):**
+
+```bash
+curl -fL -o tabernaculo https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-linux-x64
+chmod +x tabernaculo
+sudo mv tabernaculo /usr/local/bin/
+```
+
+**macOS (Intel / Apple Silicon):**
+
+```bash
+curl -fL -o tabernaculo https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-darwin-arm64
+chmod +x tabernaculo
+sudo mv tabernaculo /usr/local/bin/
+```
+
+> Gatekeeper de macOS: si macOS bloquea el binario sin firmar, ejecuta `xattr -d com.apple.quarantine ./tabernaculo` (o clic derecho → Abrir).
+
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force $HOME\.local\bin | Out-Null
+Invoke-WebRequest -Uri https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-windows-x64.exe -OutFile $HOME\.local\bin\tabernaculo.exe
+```
+
+Añade `%USERPROFILE%\.local\bin` a tu PATH si hace falta.
+
+**Verifica cualquiera de los métodos:**
+
+```bash
+tabernaculo --help
+```
+
+> Notas de plataforma: `link` crea symlinks — en Windows activa el **Modo desarrollador** (o usa una shell elevada). Los scripts de autocompletado apuntan a bash/zsh/fish; en Windows úsalos con Git Bash o WSL2.
+
+### 4) Desde el código fuente (Bun + git)
+
+**Linux / macOS**
+
 ```bash
 git clone https://github.com/wcervini/tabernaculo.git
 cd tabernaculo
 ./install.sh        # bun install + typecheck + compile + install -m755 a ~/.local/bin
 ```
 
-El script omite `bun install` si defines `SKIP_DEPS=1`. Si `~/.local/bin` no está en tu `PATH`, instala manualmente:
+`SKIP_DEPS=1` omite `bun install`. Si `~/.local/bin` no está en tu `PATH`, instala manualmente:
 
 ```bash
 bun build --compile --outfile tabernaculo src/main.ts
 install -m755 tabernaculo ~/.local/bin
 ```
 
-Durante el desarrollo, ejecuta sin compilar: `bun run src/main.ts <comando>`.
+**Windows (PowerShell)**
+
+```powershell
+git clone https://github.com/wcervini/tabernaculo.git
+cd tabernaculo
+bun install
+bun build --compile --outfile tabernaculo.exe src/main.ts
+New-Item -ItemType Directory -Force $HOME\.local\bin | Out-Null
+Move-Item .\tabernaculo.exe $HOME\.local\bin\
+```
+
+**Cualquier SO — desde el código fuente (sin compilar)**
+
+```bash
+bun install
+bun run src/main.ts <comando>
+```
 
 ## Inicio rápido
 

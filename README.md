@@ -24,20 +24,123 @@ Written in **TypeScript, running on Bun**, compiled to a single standalone binar
 
 ## Install
 
+There are several ways to get `tabernaculo` — pick whichever fits:
+
+| Method | Command | Runtime needed |
+|---|---|---|
+| **npm** (global) | `npm install -g tabernaculo` | Bun |
+| **npx** (no install) | `npx tabernaculo ...` | Bun |
+| **Compiled binary** (GitHub Releases) | download per platform | none (standalone) |
+| **From source** | see below | Bun + git |
+
+> The store and its config (`~/.config/tabernaculo/config.json`) live in your home directory, so they persist across any method.
+
+### 1) npm (global install)
+
+```bash
+npm install -g tabernaculo
+```
+
+The `tabernaculo` command is then on your `PATH`. Requires **Bun** at runtime (the entrypoint runs on Bun). You can also install it with Bun itself:
+
+```bash
+bun install -g tabernaculo
+```
+
+### 2) npx (run without installing)
+
+```bash
+npx tabernaculo <command>        # e.g. npx tabernaculo list
+```
+
+No global install — each call fetches the package. Also requires **Bun**. Add `-y` to skip the install prompt.
+
+### 3) Compiled binary (no Bun needed)
+
+Standalone binaries for every platform are attached to [GitHub Releases](https://github.com/wcervini/tabernaculo/releases). This URL always points to the latest version:
+
+```
+https://github.com/wcervini/tabernaculo/releases/latest/download/<asset>
+```
+
+| Platform | Asset |
+|---|---|
+| Linux x64 | `tabernaculo-linux-x64` |
+| Linux arm64 | `tabernaculo-linux-arm64` |
+| macOS Intel | `tabernaculo-darwin-x64` |
+| macOS Apple Silicon | `tabernaculo-darwin-arm64` |
+| Windows x64 | `tabernaculo-windows-x64.exe` |
+| Windows arm64 | `tabernaculo-windows-arm64.exe` |
+
+**Linux (x64 / arm64):**
+
+```bash
+curl -fL -o tabernaculo https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-linux-x64
+chmod +x tabernaculo
+sudo mv tabernaculo /usr/local/bin/
+```
+
+**macOS (Intel / Apple Silicon):**
+
+```bash
+curl -fL -o tabernaculo https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-darwin-arm64
+chmod +x tabernaculo
+sudo mv tabernaculo /usr/local/bin/
+```
+
+> macOS Gatekeeper: if macOS blocks the unsigned binary, run `xattr -d com.apple.quarantine ./tabernaculo` (or right-click → Open).
+
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force $HOME\.local\bin | Out-Null
+Invoke-WebRequest -Uri https://github.com/wcervini/tabernaculo/releases/latest/download/tabernaculo-windows-x64.exe -OutFile $HOME\.local\bin\tabernaculo.exe
+```
+
+Add `%USERPROFILE%\.local\bin` to your PATH if needed.
+
+**Verify any of the methods above:**
+
+```bash
+tabernaculo --help
+```
+
+> Platform notes: `link` creates symlinks — on Windows enable **Developer Mode** (or use an elevated shell). The completion scripts target bash/zsh/fish; on Windows use Git Bash or WSL2 for them.
+
+### 4) From source (Bun + git)
+
+**Linux / macOS**
+
 ```bash
 git clone https://github.com/wcervini/tabernaculo.git
 cd tabernaculo
 ./install.sh        # bun install + typecheck + compile + install -m755 to ~/.local/bin
 ```
 
-The script skips `bun install` if you set `SKIP_DEPS=1`. If `~/.local/bin` is not in your `PATH`, install it manually:
+`SKIP_DEPS=1` skips `bun install`. If `~/.local/bin` is not in your `PATH`, install manually:
 
 ```bash
 bun build --compile --outfile tabernaculo src/main.ts
 install -m755 tabernaculo ~/.local/bin
 ```
 
-During development, run without compiling: `bun run src/main.ts <command>`.
+**Windows (PowerShell)**
+
+```powershell
+git clone https://github.com/wcervini/tabernaculo.git
+cd tabernaculo
+bun install
+bun build --compile --outfile tabernaculo.exe src/main.ts
+New-Item -ItemType Directory -Force $HOME\.local\bin | Out-Null
+Move-Item .\tabernaculo.exe $HOME\.local\bin\
+```
+
+**Any OS — run from the source (no compilation)**
+
+```bash
+bun install
+bun run src/main.ts <command>
+```
 
 ## Quick start
 
