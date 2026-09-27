@@ -1,0 +1,23 @@
+# fish completion for tabernaculo
+# Instalación:
+#   tabernaculo completion fish > ~/.config/fish/completions/tabernaculo.fish
+# Nota: --skill se completa desde el store por defecto (config.json o
+# ~/.local/tabernaculo). Con store custom, usa `tabernaculo config --set`
+# o exporta TABERNACULO_HOME.
+complete -c tabernaculo -f -n __fish_use_subcommand -a "import scan list link unlink remove clis config completion help"
+complete -c tabernaculo -f -n '__fish_seen_subcommand_from completion' -a "bash zsh fish"
+complete -c tabernaculo -f -n '__fish_seen_subcommand_from help' -a "import scan list link unlink remove clis config completion"
+set -l __tab_clis agents anthropic claude codex cursor gemini opencode phi
+complete -c tabernaculo -n '__fish_seen_subcommand_from import scan list link unlink' -l cli -x -a "$__tab_clis" -d 'agent CLI'
+complete -c tabernaculo -n '__fish_seen_subcommand_from link unlink remove' -l skill -x -a '(tabernaculo __skills 2>/dev/null)' -d 'skill from store'
+complete -c tabernaculo -l store -r -F -d 'store path'
+complete -c tabernaculo -n '__fish_seen_subcommand_from link unlink' -l project -r -F -d 'project path'
+complete -c tabernaculo -n '__fish_seen_subcommand_from scan' -l dir -r -F -d 'directory to scan'
+complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l from -r -F -d 'local path or github repo'
+complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l path -r -F -d 'subdir inside repo'
+complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l ref -x -d 'branch or tag'
+complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l name -x -d 'override store name'
+complete -c tabernaculo -n '__fish_seen_subcommand_from link' -l force -d 'replace existing'
+complete -c tabernaculo -n '__fish_seen_subcommand_from link unlink' -l legacy -d 'codex legacy path'
+complete -c tabernaculo -n '__fish_seen_subcommand_from scan' -l all -d 'import all without asking'
+complete -c tabernaculo -n '__fish_seen_subcommand_from config' -l set -r -F -d 'store path'

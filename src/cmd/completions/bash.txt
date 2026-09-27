@@ -1,0 +1,69 @@
+# bash completion for tabernaculo
+# Instalación:
+#   tabernaculo completion bash | sudo tee /etc/bash_completion.d/tabernaculo
+#   o añade a ~/.bashrc:  eval "$(tabernaculo completion bash)"
+# Nota: --skill se completa desde el store por defecto (config.json o
+# ~/.local/tabernaculo). Con store custom, usa `tabernaculo config --set`
+# o exporta TABERNACULO_HOME.
+_tabernaculo() {
+  local cur prev sub w i skip
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  sub=""
+  skip=0
+  for (( i=1; i<COMP_CWORD; i++ )); do
+    w="${COMP_WORDS[i]}"
+    if (( skip )); then skip=0; continue; fi
+    case "$w" in
+      --store|--cli|--skill|--project|--dir|--from|--path|--ref|--name|--set) skip=1 ;;
+      --*=*) ;;
+      -*) ;;
+      *) sub="$w"; break ;;
+    esac
+  done
+  # Formas --flag=valor
+  case "$cur" in
+    --skill=*) COMPREPLY=( $(compgen -W "$(tabernaculo __skills 2>/dev/null)" -- "${cur#--skill=}") ); return 0 ;;
+    --cli=*) COMPREPLY=( $(compgen -W "$(tabernaculo clis 2>/dev/null)" -- "${cur#--cli=}") ); return 0 ;;
+    --store=*|--project=*|--dir=*|--from=*|--path=*|--set=*)
+      compopt -o filenames 2>/dev/null
+      COMPREPLY=( $(compgen -f -- "${cur#*=}") ); return 0 ;;
+  esac
+  # Valor tras flag separada por espacio
+  case "$prev" in
+    --cli) COMPREPLY=( $(compgen -W "$(tabernaculo clis 2>/dev/null)" -- "$cur") ); return 0 ;;
+    --skill) COMPREPLY=( $(compgen -W "$(tabernaculo __skills 2>/dev/null)" -- "$cur") ); return 0 ;;
+    --store|--project|--dir|--from|--path|--set)
+      compopt -o filenames 2>/dev/null
+      COMPREPLY=( $(compgen -f -- "$cur") ); return 0 ;;
+  esac
+  # Nombres de flags
+  if [[ "$cur" == -* ]]; then
+    local flags="--store"
+    case "$sub" in
+      import) flags="--cli --from --path --ref --name --store" ;;
+      scan) flags="--dir --cli --all --store" ;;
+      list) flags="--cli --store" ;;
+      link) flags="--cli --project --skill --force --legacy --store" ;;
+      unlink) flags="--cli --project --skill --legacy" ;;
+      remove) flags="--skill --store" ;;
+      config) flags="--set --store" ;;
+    esac
+    COMPREPLY=( $(compgen -W "$flags" -- "$cur") )
+    return 0
+  fi
+  # Subcomando o valor posicional
+  if [[ -z "$sub" ]]; then
+    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help" -- "$cur") )
+    return 0
+  fi
+  if [[ "$sub" == "completion" ]]; then
+    COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )
+  fi
+  if [[ "$sub" == "help" ]]; then
+    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help" -- "$cur") )
+  fi
+  return 0
+}
+complete -F _tabernaculo tabernaculo

@@ -1,0 +1,61 @@
+#compdef tabernaculo
+# Instalación (elige una):
+#   fpath: tabernaculo completion zsh > ~/.zfunc/_tabernaculo  (con ~/.zfunc en $fpath + compinit)
+#   eval:   eval "$(tabernaculo completion zsh)"; compdef _tabernaculo tabernaculo
+# Nota: --skill se completa desde el store por defecto (config.json o
+# ~/.local/tabernaculo). Con store custom, usa `tabernaculo config --set`
+# o exporta TABERNACULO_HOME.
+_tabernaculo_clis() {
+  compadd ${(f)"$(tabernaculo clis 2>/dev/null)"}
+}
+_tabernaculo_skills() {
+  compadd ${(f)"$(tabernaculo __skills 2>/dev/null)"}
+}
+_tabernaculo() {
+  local context state line
+  typeset -A opt_args
+  _arguments -C \
+    '--store[store path]:dir:_files -/' \
+    '1:command:->cmd' \
+    '*::args:->args' && return
+  case $state in
+    cmd)
+      _values 'command' import scan list link unlink remove clis config completion help
+      ;;
+    args)
+      case ${line[1]} in
+        import)
+          _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--from[source]:src:_files' '--path[subpath]:dir:_files -/' '--ref[ref]:ref:' '--name[name]:name:'
+          ;;
+        scan)
+          _arguments '--dir[directory]:dir:_files -/' '--cli[agent CLI hint]:cli:_tabernaculo_clis' '--all[import all without asking]'
+          ;;
+        list)
+          _arguments '--cli[filter by CLI]:cli:_tabernaculo_clis'
+          ;;
+        link)
+          _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--project[project]:dir:_files -/' '--skill[skill]:skill:_tabernaculo_skills' '--force[replace existing]' '--legacy[codex legacy path]'
+          ;;
+        unlink)
+          _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--project[project]:dir:_files -/' '--skill[skill]:skill:_tabernaculo_skills' '--legacy[codex legacy path]'
+          ;;
+        remove)
+          _arguments '--skill[skill]:skill:_tabernaculo_skills'
+          ;;
+        config)
+          _arguments '--set[store path]:dir:_files -/'
+          ;;
+        completion)
+          _values 'shell' bash zsh fish
+          ;;
+        help)
+          _values 'command' import scan list link unlink remove clis config completion
+          ;;
+      esac
+      ;;
+  esac
+}
+# Si el fichero se carga como cuerpo autoload (vía fpath), ejecútalo; si se
+# hace source manual, solo define las funciones. (Al hacer source, el propio
+# fichero aparece en funcstack; en autoload aparece _tabernaculo.)
+(( ${funcstack[(I)_tabernaculo]} )) && _tabernaculo "$@"
