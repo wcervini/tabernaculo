@@ -3,6 +3,17 @@ import { createInterface } from "node:readline/promises";
 import { list } from "../internal/store/store.ts";
 
 /**
+ * Lanzado cuando el usuario cancela una selección interactiva
+ * (escribe 'c', 'q' o 'cancelar'). Quien llama decide: import aborta,
+ * scan omite esa candidata.
+ */
+export class SelectionCancelled extends Error {
+  constructor() {
+    super("selección cancelada");
+  }
+}
+
+/**
  * Muestra las skills del store y lee la selección por stdin.
  * cli solo filtra si se pasa (hint); "" lista todo.
  */
@@ -41,7 +52,7 @@ export async function pickSkillFromNames(names: string[]): Promise<string> {
   const rl = createInterface({ input, output });
   let line: string;
   try {
-    line = await rl.question("Elige número o nombre: ");
+    line = await rl.question("Elige número o nombre ('c' cancela): ");
   } catch {
     throw new Error("no se pudo leer selección");
   } finally {
@@ -49,6 +60,7 @@ export async function pickSkillFromNames(names: string[]): Promise<string> {
   }
 
   const t = line.trim();
+  if (/^(cancelar|c|q)$/i.test(t)) throw new SelectionCancelled();
   const n = Number.parseInt(t, 10);
   if (Number.isInteger(n) && n >= 1 && n <= names.length) return names[n - 1]!;
   const found = names.find((x) => x.toLowerCase() === t.toLowerCase());

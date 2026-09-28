@@ -25,7 +25,8 @@ Nombre final: --name > campo name del frontmatter de SKILL.md > nombre de
 archivo/carpeta (normalizado: minúsculas, espacios/_→-, solo [a-z0-9-]).
 
 Varias skills: si el origen trae varias subcarpetas con SKILL.md y estás en
-una terminal, muestra un menú numerado para elegir por número o nombre.
+una terminal, muestra un menú numerado para elegir por número o nombre
+('c' o "cancelar" sale sin importar nada).
 Sin terminal (pipe/CI) pide usar --path.
 `,
   scan: `scan — explora una carpeta local y elige qué importar
@@ -38,6 +39,7 @@ envuelven) y .md sueltos. Omite ocultos, .git y node_modules.
 
 Selección:
   lista numerada + números por coma/espacio o rango: 1,3 / 1-3 / all
+  'c' (o "cancelar") sale sin importar nada
   --all  importa todo sin preguntar
 
 Si una carpeta candidata trae varias skills, en terminal abre el mismo menú

@@ -7,7 +7,7 @@ import { runCompletion, runHiddenSkills } from "./completion.ts";
 import { runConfig } from "./config.ts";
 import { flagUsage, parseCmd } from "./flags.ts";
 import { commandHelp } from "./help.ts";
-import { pickFromList, pickSkillFromNames } from "./pick.ts";
+import { pickFromList, pickSkillFromNames, SelectionCancelled } from "./pick.ts";
 import { runScan } from "./scan.ts";
 
 function usage(): void {
@@ -148,6 +148,10 @@ async function runImport(root: string, args: string[]): Promise<number> {
     console.log(`ok: ${got} -> ${skillDir(root, got)}`);
     return 0;
   } catch (e) {
+    if (e instanceof SelectionCancelled) {
+      console.log("(cancelado: no se importó nada)");
+      return 0;
+    }
     process.stderr.write(`error: ${(e as Error).message}\n`);
     return 1;
   }

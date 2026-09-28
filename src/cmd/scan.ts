@@ -1,7 +1,7 @@
 import { stdin as input, stdout as output } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { flagUsage, parseCmd } from "./flags.ts";
-import { pickSkillFromNames } from "./pick.ts";
+import { pickSkillFromNames, SelectionCancelled } from "./pick.ts";
 import { importSkill } from "../internal/importer/importer.ts";
 import type { Candidate } from "../internal/importer/scan.ts";
 import { scanDir } from "../internal/importer/scan.ts";
@@ -47,12 +47,18 @@ export async function runScan(root: string, args: string[]): Promise<number> {
     const rl = createInterface({ input, output });
     let line: string;
     try {
-      line = await rl.question("Elige números (ej. 1,3 o 1-3, 'all' para todas): ");
+      line = await rl.question("Elige números (ej. 1,3 o 1-3, 'all' para todas, 'c' cancela): ");
     } catch (e) {
       process.stderr.write(`error: no se pudo leer selección: ${(e as Error).message}\n`);
       return 1;
     } finally {
       rl.close();
+    }
+
+    // Salida voluntaria: no se importa nada y no es un error.
+    if (/^(cancelar|c|q)$/i.test(line.trim())) {
+      console.log("(cancelado: no se importó nada)");
+      return 0;
     }
 
     let idx: number[];
@@ -76,6 +82,10 @@ export async function runScan(root: string, args: string[]): Promise<number> {
       console.log(`ok: ${got}`);
       ok++;
     } catch (e) {
+      if (e instanceof SelectionCancelled) {
+        console.log(`– ${c.name}: omitida`);
+        continue;
+      }
       console.log(`x ${c.name}: ${(e as Error).message}`);
       fail++;
     }
