@@ -2,3 +2,5 @@ node_modules/
 tabernaculo
 
 .opencode/
+assets/**/*
+MEMORIA.md
