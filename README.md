@@ -188,7 +188,7 @@ $ tabernaculo import --from org/multi-skill-repo
 Skills encontradas en el origen:
   1) alpha
   2) beta
-Elige número o nombre: 2
+Elige número o nombre ('c' cancela): 2
 ok: beta -> ~/.skills/beta
 ```
 
@@ -200,7 +200,7 @@ Skills detectadas:
   1) drizzle [carpeta]
   2) zod [carpeta]
   3) my-notes [.md]
-Elige números (ej. 1,3 o 1-3, 'all' para todas): 1-2
+Elige números (ej. 1,3 o 1-3, 'all' para todas, 'c' cancela): 1-2
 ok: drizzle -> ~/.skills/drizzle
 ok: zod -> ~/.skills/zod
 resumen: 2 ok, 0 fallos
@@ -319,4 +319,4 @@ bun run build         # bun build --compile → ./tabernaculo
 
 > Note: the compiled binary embeds the Bun runtime, so it is large (**~95 MB**) — the trade-off for a standalone, dependency-free executable (comparable to `go build` output size expectations aside).
 
-This project was ported from an original Go implementation; equivalent `cmd/` and `internal/` packages map 1:1. The detailed (Spanish) design documentation lives in [`MEMORIA.md`](MEMORIA.md).
+This project was ported from an original Go implementation; equivalent `cmd/` and `internal/` packages map 1:1.
