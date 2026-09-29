@@ -25,7 +25,7 @@ _tabernaculo() {
     args)
       case ${line[1]} in
         import)
-          _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--from[source]:src:_files' '--path[subpath]:dir:_files -/' '--ref[ref]:ref:' '--name[name]:name:'
+          _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--from[source]:src:_files' '--path[subpath]:dir:_files -/' '--ref[ref]:ref:' '--name[name]:name:' '-D[delete source folder after import]' '--delete-source[delete source folder after import]'
           ;;
         scan)
           _arguments '--dir[directory]:dir:_files -/' '--cli[agent CLI hint]:cli:_tabernaculo_clis' '--all[import all without asking]'

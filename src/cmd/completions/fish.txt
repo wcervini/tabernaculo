@@ -17,6 +17,7 @@ complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l from -r -F -d
 complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l path -r -F -d 'subdir inside repo'
 complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l ref -x -d 'branch or tag'
 complete -c tabernaculo -n '__fish_seen_subcommand_from import' -l name -x -d 'override store name'
+complete -c tabernaculo -n '__fish_seen_subcommand_from import' -s D -l delete-source -d 'delete source folder after import'
 complete -c tabernaculo -n '__fish_seen_subcommand_from link' -l force -d 'replace existing'
 complete -c tabernaculo -n '__fish_seen_subcommand_from link unlink' -l legacy -d 'codex legacy path'
 complete -c tabernaculo -n '__fish_seen_subcommand_from scan' -l all -d 'import all without asking'
