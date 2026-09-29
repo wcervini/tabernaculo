@@ -328,7 +328,8 @@ tabernaculo completion fish --install                                     # → 
 ```
 src/
   main.ts                  entrypoint → dispatch
-  cmd/                     command layer (root, flags, pick, scan, config, help, completion)
+  version.ts               version read from package.json (inlined at build time)
+  cmd/                     command layer (root, flags, pick, scan, config, help, completion, version)
   internal/
     cliDefs/               agent-CLI → destination folder map
     store/                 store, meta, list/resolve/remove

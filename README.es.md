@@ -326,7 +326,8 @@ tabernaculo completion fish --install                                     # → 
 ```
 src/
   main.ts                  entrypoint → dispatch
-  cmd/                     capa de comandos (root, flags, pick, scan, config, help, completion)
+  version.ts               versión leída de package.json (incrustada al compilar)
+  cmd/                     capa de comandos (root, flags, pick, scan, config, help, completion, version)
   internal/
     cliDefs/               mapa agent-CLI → carpeta destino
     store/                 store, meta, list/resolve/remove
