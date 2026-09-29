@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `import -D` (`--delete-source`): imports a skill from a **local folder**
+  and then deletes that folder. It only accepts the conventional Agent Skills
+  layout — `SKILL.md` at the root of the folder, extra files/subfolders
+  allowed — and the folder name must match the `name` field of the
+  `SKILL.md` frontmatter. If any of that fails, nothing is imported and
+  nothing is deleted (error, exit 1). Rejected with a clear error: a loose
+  `.md`, a GitHub source, `--path` and `--name` combinations, and critical
+  paths (`/`, `$HOME`, cwd). After a successful import, a terminal asks for
+  confirmation (`s` = yes, default no) before deleting; without a TTY it
+  deletes right away. Useful after downloading a skill or running
+  `npx skills add <path>`.
+- Shell completion (bash/zsh/fish) knows the new flag.
+
+### Changed
+- `importSkill` (internal API) now takes an `ImportOptions` object instead of
+  seven positional arguments, and returns `ImportResult`
+  (`name`, `removed`, `kept`) so the caller can report whether the source
+  folder was deleted. Internal API only; the CLI behaviour is unchanged.
+- `import --help` documents `-D`; both READMEs gained an
+  "import and delete the source folder" section.
+
 ## [0.2.0] - 2026-09-28
 
 ### Added

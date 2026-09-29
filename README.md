@@ -181,6 +181,31 @@ tabernaculo import --from ~/notes/awesome-skill.md
 tabernaculo import --from ~/src/my-skill-folder --name my-skill-2
 ```
 
+#### Import and delete the source folder (`-D`)
+
+`-D` (or `--delete-source`) imports a skill from a local folder and then **deletes that folder**. It only applies when the folder follows the conventional Agent Skills layout:
+
+```
+my-skill/
+├── SKILL.md          # required: metadata + instructions (at the root)
+├── scripts/          # optional: executable code
+├── references/       # optional: documentation
+├── assets/           # optional: templates, resources
+└── ...               # any other file or folder
+```
+
+The folder name must match the `name` field of the `SKILL.md` frontmatter. If any of that doesn't hold, **nothing is imported and nothing is deleted** (error, exit code 1). `--path` and `--name` cannot be combined with `-D`, and a loose `.md` or a GitHub source is rejected.
+
+```bash
+# a folder you just downloaded, or that you added with `npx skills add <path>`
+tabernaculo import --from ~/src/my-skill -D
+ok: my-skill -> ~/.skills/my-skill
+¿Borrar la carpeta origen /home/me/src/my-skill? [s/N]: s
+ok: origen borrado: /home/me/src/my-skill
+```
+
+In a terminal it asks for confirmation before deleting (`s` = yes, default no); without a TTY it deletes right away. If you decline, the skill stays in the store and the folder is kept (`aviso: origen conservado: …`).
+
 A repo with several skills opens a numbered menu in a terminal (without a TTY it keeps the error suggesting `--path`):
 
 ```
@@ -250,7 +275,7 @@ tabernaculo config --set ~/.skills    # persist the store path in config.json
 
 | Command | Description |
 |---|---|
-| `import` | Import a skill from a local path or GitHub. `--from` can be a folder, a loose `.md`, an `owner/repo` or a URL; `--path <sub/dir>` for a subpath; `--ref <branch>` for a specific branch; `--name <override>` to rename. In a terminal, a repo with several skills shows a numbered menu (pick by number or name). |
+| `import` | Import a skill from a local path or GitHub. `--from` can be a folder, a loose `.md`, an `owner/repo` or a URL; `--path <sub/dir>` for a subpath; `--ref <branch>` for a specific branch; `--name <override>` to rename. In a terminal, a repo with several skills shows a numbered menu (pick by number or name). `-D` deletes the source folder after importing (local folder with `SKILL.md` at its root, folder name = frontmatter `name`; asks before deleting in a terminal). |
 | `scan` | Detect skills under `--dir` (subfolders with `SKILL.md`/`.md`, loose `.md` files) and import them. Select with `1,3`, `1-3` or `all`; `--all` skips the prompt. Prints a `N ok, M fail` summary. |
 | `list` | List the skills in the store. `--cli <hint>` filters by the hint stored at import time. |
 | `link` | Symlink a skill into a project: `--cli <agent>`, `--project <path>`, `--skill <name>` (omitting `--skill` opens an interactive picker). Idempotent; `--force` replaces links/files (never real directories); `--legacy` targets the old Codex layout. |

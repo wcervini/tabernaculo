@@ -179,6 +179,31 @@ tabernaculo import --from ~/notes/awesome-skill.md
 tabernaculo import --from ~/src/my-skill-folder --name my-skill-2
 ```
 
+#### Importar y borrar la carpeta origen (`-D`)
+
+`-D` (o `--delete-source`) importa una skill desde una carpeta local y luego **borra esa carpeta**. Solo se aplica si la carpeta sigue la estructura convencional de Agent Skills:
+
+```
+mi-skill/
+├── SKILL.md          # obligatorio: metadatos + instrucciones (en la raíz)
+├── scripts/          # opcional: código ejecutable
+├── references/       # opcional: documentación
+├── assets/           # opcional: plantillas y recursos
+└── ...               # cualquier otro fichero o carpeta
+```
+
+Además, el nombre de la carpeta debe coincidir con el campo `name` del frontmatter de `SKILL.md`. Si algo no cuadra, **no se importa nada y no se borra nada** (error, código 1). No se puede combinar con `--path` ni con `--name`, y se rechaza un `.md` suelto o un origen de GitHub.
+
+```bash
+# una carpeta recién descargada, o añadida con `npx skills add <ruta>`
+tabernaculo import --from ~/src/mi-skill -D
+ok: mi-skill -> ~/.skills/mi-skill
+¿Borrar la carpeta origen /home/usuario/src/mi-skill? [s/N]: s
+ok: origen borrado: /home/usuario/src/mi-skill
+```
+
+En terminal interactiva pide confirmación antes de borrar (`s` = sí, por defecto no); sin TTY borra directamente. Si renuncias, la skill queda en el store y la carpeta se conserva (`aviso: origen conservado: …`).
+
 Un repo con varias skills abre un **menú numerado** en terminal interactiva (sin TTY mantiene el error sugiriendo `--path`):
 
 ```
@@ -248,7 +273,7 @@ tabernaculo config --set ~/.skills    # persiste la ruta del store en config.jso
 
 | Comando | Descripción |
 |---|---|
-| `import` | Importa una skill desde una ruta local o GitHub. `--from` puede ser una carpeta, un `.md` suelto, un `owner/repo` o una URL; `--path <sub/dir>` para un subpath; `--ref <rama>` para una rama concreta; `--name <override>` para renombrar. En terminal, un repo con varias skills muestra un **menú numerado** (elige por número o nombre). |
+| `import` | Importa una skill desde una ruta local o GitHub. `--from` puede ser una carpeta, un `.md` suelto, un `owner/repo` o una URL; `--path <sub/dir>` para un subpath; `--ref <rama>` para una rama concreta; `--name <override>` para renombrar. En terminal, un repo con varias skills muestra un **menú numerado** (elige por número o nombre). `-D` borra la carpeta origen tras importar (carpeta local con `SKILL.md` en la raíz y nombre de carpeta = `name` del frontmatter; pide confirmación en terminal). |
 | `scan` | Detecta skills bajo `--dir` (subcarpetas con `SKILL.md`/`.md`, y `.md` sueltos) y las importa. Selección con `1,3`, `1-3` o `all`; `--all` salta la pregunta. Resume con `N ok, M fallos`. |
 | `list` | Lista las skills del store. `--cli <hint>` filtra por el hint guardado al importar. |
 | `link` | Enlaza una skill a un proyecto: `--cli <agent>`, `--project <ruta>`, `--skill <nombre>` (si omites `--skill` abre un selector interactivo). Idempotente; `--force` reemplaza links/ficheros (nunca directorios reales); `--legacy` apunta al layout antiguo de Codex. |
