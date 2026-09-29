@@ -129,6 +129,14 @@ Ejemplos:
   tabernaculo completion zsh > ~/.zfunc/_tabernaculo
   tabernaculo completion fish --install
 `,
+  version: `version — muestra la versión de tabernaculo
+
+Uso:
+  tabernaculo version                 (alias: tabernaculo -v, tabernaculo --version)
+
+Imprime "tabernaculo <version>" y sale con código 0. No toca el store.
+La versión viene de package.json; en el binario compilado va incrustada.
+`,
   help: `help — muestra la ayuda
 
 Uso:

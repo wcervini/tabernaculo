@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { VERSION } from "../version.ts";
 import { list as listClis } from "../internal/cliDefs/cli.ts";
 import { ensureConfig, resolveStore } from "../internal/config/config.ts";
 import { importSkill } from "../internal/importer/importer.ts";
@@ -28,9 +29,11 @@ Comandos:
   config   muestra/edita el store por defecto (config.json)
   completion genera script de autocompletado (bash|zsh|fish)
   help     ayuda general o detallada (help <comando>, o <comando> --help)
+  version  muestra la versión de tabernaculo
 
 Global:
-  --store  ruta del store (default: config.json o ~/.local/tabernaculo)
+  --store    ruta del store (default: config.json o ~/.local/tabernaculo)
+  -v, --version  versión de tabernaculo
 `);
 }
 
@@ -73,6 +76,11 @@ export async function dispatch(argv: string[]): Promise<number> {
       return 2;
     }
     process.stdout.write(text);
+    return 0;
+  }
+  // Versión: "version", "-v" o "--version". No toca el store ni el config.
+  if (cmd === "version" || cmd === "-v" || cmd === "--version") {
+    process.stdout.write(`tabernaculo ${VERSION}\n`);
     return 0;
   }
   if (rest.slice(1).some((a) => a === "-h" || a === "--help")) {
