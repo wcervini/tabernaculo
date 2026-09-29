@@ -67,3 +67,24 @@ export async function pickSkillFromNames(names: string[]): Promise<string> {
   if (found) return found;
   throw new Error("selección inválida");
 }
+
+/**
+ * Confirmación del borrado de la carpeta origen tras importar (-D).
+ * En terminal pregunta (s = sí, por defecto no); sin TTY no hay quien
+ * conteste, así que devuelve true (el flujo normal de scripts/CI).
+ */
+export async function confirmDeleteDir(dir: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return true;
+  const rl = createInterface({ input, output });
+  let answer: string;
+  try {
+    answer = await rl.question(`¿Borrar la carpeta origen ${dir}? [s/N]: `);
+  } catch {
+    // Si no se puede leer, se conserva el origen (más seguro que borrar).
+    process.stderr.write("no se pudo leer la confirmación: se conserva el origen\n");
+    return false;
+  } finally {
+    rl.close();
+  }
+  return /^(s|si|sí|y|yes)$/i.test(answer.trim());
+}

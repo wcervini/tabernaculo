@@ -78,8 +78,8 @@ export async function runScan(root: string, args: string[]): Promise<number> {
   const select = process.stdin.isTTY ? pickSkillFromNames : undefined;
   for (const c of sel) {
     try {
-      const got = await importSkill(root, cli, c.path, "", "", "", select);
-      console.log(`ok: ${got}`);
+      const got = await importSkill(root, { from: c.path, cli, select });
+      console.log(`ok: ${got.name}`);
       ok++;
     } catch (e) {
       if (e instanceof SelectionCancelled) {

@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { list as listClis } from "../internal/cliDefs/cli.ts";
 import { ensureConfig, resolveStore } from "../internal/config/config.ts";
 import { importSkill } from "../internal/importer/importer.ts";
@@ -7,7 +8,7 @@ import { runCompletion, runHiddenSkills } from "./completion.ts";
 import { runConfig } from "./config.ts";
 import { flagUsage, parseCmd } from "./flags.ts";
 import { commandHelp } from "./help.ts";
-import { pickFromList, pickSkillFromNames, SelectionCancelled } from "./pick.ts";
+import { confirmDeleteDir, pickFromList, pickSkillFromNames, SelectionCancelled } from "./pick.ts";
 import { runScan } from "./scan.ts";
 
 function usage(): void {
@@ -124,7 +125,10 @@ export async function dispatch(argv: string[]): Promise<number> {
 async function runImport(root: string, args: string[]): Promise<number> {
   let flags: Record<string, string | boolean>;
   try {
-    flags = parseCmd(args, { string: ["cli", "from", "path", "ref", "name"] });
+    flags = parseCmd(args, {
+      string: ["cli", "from", "path", "ref", "name"],
+      boolean: ["D", "delete-source"],
+    });
   } catch (e) {
     return flagUsage(e);
   }
@@ -133,19 +137,23 @@ async function runImport(root: string, args: string[]): Promise<number> {
     process.stderr.write("import requiere --from\n");
     return 2;
   }
+  const deleteSource = Boolean(flags.D || flags["delete-source"]);
   // Si el origen trae varias skills, se ofrece un menú (solo en terminal).
   const select = process.stdin.isTTY ? pickSkillFromNames : undefined;
   try {
-    const got = await importSkill(
-      root,
-      flags.cli as string,
+    const got = await importSkill(root, {
       from,
-      flags.path as string,
-      flags.ref as string,
-      flags.name as string,
+      cli: flags.cli as string,
+      subPath: flags.path as string,
+      ref: flags.ref as string,
+      name: flags.name as string,
       select,
-    );
-    console.log(`ok: ${got} -> ${skillDir(root, got)}`);
+      deleteSource,
+      confirmDelete: confirmDeleteDir,
+    });
+    console.log(`ok: ${got.name} -> ${skillDir(root, got.name)}`);
+    if (got.removed) console.log(`ok: origen borrado: ${got.removed}`);
+    else if (got.kept) console.log(`aviso: origen conservado: ${resolve(from)}`);
     return 0;
   } catch (e) {
     if (e instanceof SelectionCancelled) {

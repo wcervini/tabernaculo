@@ -20,9 +20,24 @@ Flags:
   --path <sub/dir>    subruta dentro del repo donde está la skill
   --ref <rama>        rama/tag para el clon de GitHub
   --name <nombre>     fuerza el nombre final (evita colisiones)
+  -D, --delete-source borra la carpeta de origen tras importar (solo local)
 
 Nombre final: --name > campo name del frontmatter de SKILL.md > nombre de
 archivo/carpeta (normalizado: minúsculas, espacios/_→-, solo [a-z0-9-]).
+
+-D (importar y borrar el origen):
+  Solo con una carpeta local que tenga la estructura convencional:
+      <mi-skill>/SKILL.md            (obligatorio, en la raíz)
+      <mi-skill>/scripts/            (opcional)
+      <mi-skill>/references/         (opcional)
+      <mi-skill>/assets/             (opcional)
+      <mi-skill>/...cualquier otro fichero o carpeta
+  Además, el nombre de la carpeta debe coincidir con el campo name del
+  frontmatter de SKILL.md. Si algo no cuadra, NO se importa ni se borra
+  nada (error y código 1). No se puede combinar con --path ni con --name.
+  Tras importar bien, en una terminal pide confirmación (s = sí) y luego
+  borra la carpeta origen; sin terminal borra directamente.
+  Útil tras descargar skills de un repo o con "npx skills add <ruta>".
 
 Varias skills: si el origen trae varias subcarpetas con SKILL.md y estás en
 una terminal, muestra un menú numerado para elegir por número o nombre
