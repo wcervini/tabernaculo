@@ -286,6 +286,7 @@ tabernaculo config --set ~/.skills    # persist the store path in config.json
 | `config` | Show the effective store, its origin and the config file. `--set <path>` writes `config.json` (`~` is expanded). |
 | `completion` | Print a completion script: `bash`, `zsh` or `fish`. `fish --install` writes it into `~/.config/fish/completions/`. |
 | `help` | General help, or `help <command>` / `<command> --help` for per-command details. |
+| `version` | Prints the version: `tabernaculo version`, `tabernaculo -v` or `tabernaculo --version`. Does not touch the store. |
 
 Run `tabernaculo help <command>` for the full flag list and notes.
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `tabernaculo version` (also `-v` / `--version`) prints `tabernaculo <version>`
+  and exits 0. It answers before touching the store or the config, like `help`.
+  The version is read from `package.json` (the single source of truth, never
+  hardcoded in the code) and `bun build --compile` inlines it, so every release
+  binary reports its own version without reading files at runtime. Installed
+  from npm the bin is `src/main.ts` and `package.json` always ships in the
+  tarball, so it works the same way.
+- Shell completion (bash/zsh/fish) knows the `version` command and the global
+  `--version` / `-v` flag.
+- Documented in the help output (`tabernaculo help version` plus the general
+  help) and in the command table of both READMEs.
+
 ## [0.3.0] - 2026-09-29
 
 ### Added

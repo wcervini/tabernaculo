@@ -284,6 +284,7 @@ tabernaculo config --set ~/.skills    # persiste la ruta del store en config.jso
 | `config` | Muestra el store efectivo, su origen y el archivo de configuración. `--set <ruta>` escribe `config.json` (se expande `~`). |
 | `completion` | Imprime un script de autocompletado: `bash`, `zsh` o `fish`. `fish --install` lo escribe en `~/.config/fish/completions/`. |
 | `help` | Ayuda general, o `help <comando>` / `<comando> --help` para ayuda detallada. |
+| `version` | Imprime la versión: `tabernaculo version`, `tabernaculo -v` o `tabernaculo --version`. No toca el store. |
 
 Ejecuta `tabernaculo help <comando>` para la lista completa de flags y notas.
 
