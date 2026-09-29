@@ -40,7 +40,7 @@ _tabernaculo() {
   esac
   # Nombres de flags
   if [[ "$cur" == -* ]]; then
-    local flags="--store"
+    local flags="--store --version -v"
     case "$sub" in
       import) flags="--cli --from --path --ref --name -D --delete-source --store" ;;
       scan) flags="--dir --cli --all --store" ;;
@@ -55,14 +55,14 @@ _tabernaculo() {
   fi
   # Subcomando o valor posicional
   if [[ -z "$sub" ]]; then
-    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help" -- "$cur") )
+    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help version" -- "$cur") )
     return 0
   fi
   if [[ "$sub" == "completion" ]]; then
     COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )
   fi
   if [[ "$sub" == "help" ]]; then
-    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help" -- "$cur") )
+    COMPREPLY=( $(compgen -W "import scan list link unlink remove clis config completion help version" -- "$cur") )
   fi
   return 0
 }
