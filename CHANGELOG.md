@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-29
+
 ### Added
 - `import -D` (`--delete-source`): imports a skill from a **local folder**
   and then deletes that folder. It only accepts the conventional Agent Skills
@@ -69,6 +71,7 @@ to a single standalone binary (`bun build --compile`).
 - GitHub Actions release workflow: 6 platform binaries
   (linux/darwin/windows × x64/arm64) on `v*` tags.
 
-[Unreleased]: https://github.com/wcervini/tabernaculo/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/wcervini/tabernaculo/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/wcervini/tabernaculo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/wcervini/tabernaculo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/wcervini/tabernaculo/releases/tag/v0.1.0

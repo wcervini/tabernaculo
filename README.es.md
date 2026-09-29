@@ -10,6 +10,7 @@ Escrito en **TypeScript sobre Bun**, compilado a un **binario único**. Sin depe
 
 - **Un solo store para todos los agent-CLIs** — la skill es genérica; el agent-CLI solo decide la carpeta destino al enlazar.
 - **`import` desde GitHub o local** — carpeta con `SKILL.md`, un `.md` suelto (se envuelve como `SKILL.md`), o un repo con varias skills (menú numerado interactivo en terminal).
+- **`import -D`** — importa una skill desde una carpeta local y borra esa carpeta, solo si sigue la estructura convencional (`SKILL.md` en la raíz, nombre de carpeta = `name` del frontmatter); pide confirmación en terminal.
 - **`scan`** — detecta e importa varias skills de una carpeta local a la vez, con selección `1,3`, `1-3` o `all`.
 - **`link`/`unlink`** — enlaza skills a un proyecto con symlinks seguros (idempotente, `--force` para reemplazar).
 - **`config`** — apunta el store a cualquier carpeta (p. ej. `~/.skills`), o mantén el default `~/.local/tabernaculo`.

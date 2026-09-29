@@ -1,6 +1,6 @@
 {
   "name": "tabernaculo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Skill manager (Agent Skills) for agent CLIs — import skills from GitHub/local and link them into projects.",
   "type": "module",
   "license": "MIT",

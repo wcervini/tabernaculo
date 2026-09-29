@@ -10,6 +10,7 @@ Written in **TypeScript, running on Bun**, compiled to a single standalone binar
 
 - **Single store for all agent CLIs** — skills are generic; the agent CLI only decides the destination folder when linking.
 - **`import` from GitHub or local** — folder with `SKILL.md`, a loose `.md` (wrapped as `SKILL.md`), or a repo with several skills (interactive numbered menu in a terminal).
+- **`import -D`** — import a skill from a local folder and delete that folder, only if it follows the conventional layout (`SKILL.md` at its root, folder name = frontmatter `name`); asks before deleting in a terminal.
 - **`scan`** — detect and import multiple skills from a local folder at once, with `1,3`, `1-3` or `all` selection.
 - **`link`/`unlink`** — symlink skills into a project using safe links (idempotent, `--force` to replace).
 - **`config`** — point the store at any folder (e.g. `~/.skills`), or keep the default `~/.local/tabernaculo`.
