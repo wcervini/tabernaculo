@@ -6,7 +6,7 @@
 # o exporta TABERNACULO_HOME.
 complete -c tabernaculo -f -n __fish_use_subcommand -a "import scan list link unlink remove clis config completion help version"
 complete -c tabernaculo -f -n '__fish_seen_subcommand_from completion' -a "bash zsh fish"
-complete -c tabernaculo -f -n '__fish_seen_subcommand_from help' -a "import scan list link unlink remove clis config completion version"
+complete -c tabernaculo -f -n '__fish_seen_subcommand_from help' -a "import scan list link unlink remove clis config completion help version"
 set -l __tab_clis agents anthropic claude codex cursor gemini opencode phi
 complete -c tabernaculo -n '__fish_seen_subcommand_from import scan list link unlink' -l cli -x -a "$__tab_clis" -d 'agent CLI'
 complete -c tabernaculo -n '__fish_seen_subcommand_from link unlink remove' -l skill -x -a '(tabernaculo __skills 2>/dev/null)' -d 'skill from store'

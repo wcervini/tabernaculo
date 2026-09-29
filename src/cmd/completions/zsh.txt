@@ -50,7 +50,7 @@ _tabernaculo() {
           _values 'shell' bash zsh fish
           ;;
         help)
-          _values 'command' import scan list link unlink remove clis config completion version
+          _values 'command' import scan list link unlink remove clis config completion help version
           ;;
       esac
       ;;
