@@ -44,7 +44,7 @@ _tabernaculo() {
     case "$sub" in
       import) flags="--cli --from --path --ref --name -D --delete-source --store" ;;
       scan) flags="--dir --cli --all --store" ;;
-      list) flags="--cli --store" ;;
+      list) flags="--cli --project --legacy --available" ;;
       link) flags="--cli --project --skill --force --legacy --store" ;;
       unlink) flags="--cli --project --skill --legacy" ;;
       remove) flags="--skill --store" ;;

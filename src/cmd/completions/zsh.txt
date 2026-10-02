@@ -32,7 +32,7 @@ _tabernaculo() {
           _arguments '--dir[directory]:dir:_files -/' '--cli[agent CLI hint]:cli:_tabernaculo_clis' '--all[import all without asking]'
           ;;
         list)
-          _arguments '--cli[filter by CLI]:cli:_tabernaculo_clis'
+          _arguments '--cli[filter by CLI / agent]:cli:_tabernaculo_clis' '--project[project to inspect (default CWD)]:dir:_files -/' '--legacy[codex legacy path]' '--available[list store skills instead]'
           ;;
         link)
           _arguments '--cli[agent CLI]:cli:_tabernaculo_clis' '--project[project]:dir:_files -/' '--skill[skill]:skill:_tabernaculo_skills' '--force[replace existing]' '--legacy[codex legacy path]'
