@@ -40,6 +40,24 @@ export function list(): string[] {
   return Object.keys(defs).sort();
 }
 
+/**
+ * Directorios destino únicos (incluye el legacy de codex), sin duplicados por
+ * alias (claude/anthropic comparten dir, igual que codex/agents).
+ */
+export function dirs(): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const name of list()) {
+    const d = defs[name]!;
+    for (const dir of [d.dir, d.legacyDir]) {
+      if (!dir || seen.has(dir)) continue;
+      seen.add(dir);
+      out.push(dir);
+    }
+  }
+  return out;
+}
+
 function baseDir(key: string, legacy: boolean): string {
   const d = defs[key]!;
   if (legacy) {

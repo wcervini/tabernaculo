@@ -1,16 +1,11 @@
-import { resolve } from "node:path";
 import { VERSION } from "../version.ts";
 import { list as listClis } from "../internal/cliDefs/cli.ts";
 import { ensureConfig, resolveStore } from "../internal/config/config.ts";
-import { importSkill } from "../internal/importer/importer.ts";
-import { link, unlink } from "../internal/linker/linker.ts";
-import { list as listStore, remove, skillDir } from "../internal/store/store.ts";
 import { runCompletion, runHiddenSkills } from "./completion.ts";
 import { runConfig } from "./config.ts";
-import { flagUsage, parseCmd } from "./flags.ts";
 import { commandHelp } from "./help.ts";
-import { confirmDeleteDir, pickFromList, pickSkillFromNames, SelectionCancelled } from "./pick.ts";
 import { runScan } from "./scan.ts";
+import { runImport, runLink, runList, runRemove, runUnlink } from "./skills.ts";
 
 function usage(): void {
   process.stderr.write(`tabernaculo — gestor de skills para agent-CLIs
@@ -21,7 +16,7 @@ Uso:
 Comandos:
   import   importa skill desde path local o GitHub (menú si trae varias)
   scan     explora carpeta local y deja elegir qué importar
-  list     lista skills del store
+  list     lista skills instaladas en el proyecto (CWD); store con --available
   link     enlaza skill del store a un proyecto (symlink)
   unlink   quita el symlink del proyecto
   remove   borra una skill del store
@@ -96,7 +91,7 @@ export async function dispatch(argv: string[]): Promise<number> {
   const root = resolved.root;
   switch (cmd) {
     case "import":
-      return runImport(root, rest.slice(1));
+      return await runImport(root, rest.slice(1));
     case "scan":
       return await runScan(root, rest.slice(1));
     case "list":
@@ -104,7 +99,7 @@ export async function dispatch(argv: string[]): Promise<number> {
     case "link":
       return await runLink(root, rest.slice(1));
     case "unlink":
-      return runUnlink(root, rest.slice(1));
+      return await runUnlink(root, rest.slice(1));
     case "remove":
     case "rm":
     case "delete":
@@ -127,149 +122,5 @@ export async function dispatch(argv: string[]): Promise<number> {
       process.stderr.write(`comando desconocido: ${cmd}\n`);
       usage();
       return 2;
-  }
-}
-
-async function runImport(root: string, args: string[]): Promise<number> {
-  let flags: Record<string, string | boolean>;
-  try {
-    flags = parseCmd(args, {
-      string: ["cli", "from", "path", "ref", "name"],
-      boolean: ["D", "delete-source"],
-    });
-  } catch (e) {
-    return flagUsage(e);
-  }
-  const from = flags.from as string;
-  if (!from) {
-    process.stderr.write("import requiere --from\n");
-    return 2;
-  }
-  const deleteSource = Boolean(flags.D || flags["delete-source"]);
-  // Si el origen trae varias skills, se ofrece un menú (solo en terminal).
-  const select = process.stdin.isTTY ? pickSkillFromNames : undefined;
-  try {
-    const got = await importSkill(root, {
-      from,
-      cli: flags.cli as string,
-      subPath: flags.path as string,
-      ref: flags.ref as string,
-      name: flags.name as string,
-      select,
-      deleteSource,
-      confirmDelete: confirmDeleteDir,
-    });
-    console.log(`ok: ${got.name} -> ${skillDir(root, got.name)}`);
-    if (got.removed) console.log(`ok: origen borrado: ${got.removed}`);
-    else if (got.kept) console.log(`aviso: origen conservado: ${resolve(from)}`);
-    return 0;
-  } catch (e) {
-    if (e instanceof SelectionCancelled) {
-      console.log("(cancelado: no se importó nada)");
-      return 0;
-    }
-    process.stderr.write(`error: ${(e as Error).message}\n`);
-    return 1;
-  }
-}
-
-function runList(root: string, args: string[]): number {
-  let flags: Record<string, string | boolean>;
-  try {
-    flags = parseCmd(args, { string: ["cli"] });
-  } catch (e) {
-    return flagUsage(e);
-  }
-  let entries;
-  try {
-    entries = listStore(root, flags.cli as string);
-  } catch (e) {
-    process.stderr.write(`error: ${(e as Error).message}\n`);
-    return 1;
-  }
-  if (entries.length === 0) {
-    console.log("(store vacío)");
-    return 0;
-  }
-  for (const e of entries) console.log(e.name);
-  return 0;
-}
-
-async function runLink(root: string, args: string[]): Promise<number> {
-  let flags: Record<string, string | boolean>;
-  try {
-    flags = parseCmd(args, { string: ["cli", "project", "skill"], boolean: ["force", "legacy"] });
-  } catch (e) {
-    return flagUsage(e);
-  }
-  const cli = flags.cli as string;
-  const project = flags.project as string;
-  let skill = flags.skill as string;
-  if (!cli || !project) {
-    process.stderr.write("link requiere --cli y --project\n");
-    return 2;
-  }
-  if (!skill) {
-    try {
-      skill = await pickFromList(root, "");
-    } catch (e) {
-      process.stderr.write(`error: ${(e as Error).message}\n`);
-      return 1;
-    }
-  }
-  try {
-    const { target, source } = link(root, cli, skill, project, flags.force as boolean, flags.legacy as boolean);
-    console.log(`ok: ${target} -> ${source}`);
-    return 0;
-  } catch (e) {
-    process.stderr.write(`error: ${(e as Error).message}\n`);
-    return 1;
-  }
-}
-
-function runUnlink(root: string, args: string[]): number {
-  void root;
-  let flags: Record<string, string | boolean>;
-  try {
-    flags = parseCmd(args, { string: ["cli", "project", "skill"], boolean: ["legacy"] });
-  } catch (e) {
-    return flagUsage(e);
-  }
-  const cli = flags.cli as string;
-  const project = flags.project as string;
-  const skill = flags.skill as string;
-  if (!cli || !project || !skill) {
-    process.stderr.write("unlink requiere --cli, --project y --skill\n");
-    return 2;
-  }
-  try {
-    unlink(project, cli, skill, flags.legacy as boolean);
-    console.log("ok: enlace eliminado");
-    return 0;
-  } catch (e) {
-    process.stderr.write(`error: ${(e as Error).message}\n`);
-    return 1;
-  }
-}
-
-function runRemove(root: string, args: string[]): number {
-  let flags: Record<string, string | boolean>;
-  try {
-    flags = parseCmd(args, { string: ["skill"] });
-  } catch (e) {
-    return flagUsage(e);
-  }
-  const skill = flags.skill as string;
-  if (!skill) {
-    process.stderr.write("remove requiere --skill\n");
-    return 2;
-  }
-  try {
-    remove(root, skill);
-    console.log("ok: skill eliminada del store");
-    return 0;
-  } catch (e) {
-    process.stderr.write(`error: ${(e as Error).message}\n`);
-    return 1;
   }
 }
