@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-02
+
+### Added
+- Interactive prompts now use `@inquirer/prompts`: **checkbox** multi-select
+  where several skills make sense and an explicit **Cancel** entry (Ctrl-C
+  still works). Skills selected in one `import` are imported atomically.
+- **Link manifest**: every `link` is recorded in `<cliDir>/.tabernaculo.json`
+  (e.g. `.opencode/skills/.tabernaculo.json`). The symlinks remain the source
+  of truth; the manifest is reconciled against the filesystem (stale entries
+  are dropped) and only marks which links tabernaculo created.
+- `list` can list the skills **installed** in a project: `list` (current
+  directory), `list --project <path>`, `--cli <agent>` (a single CLI, or
+  grouped by target folder) and `--legacy`; broken links are flagged. The store
+  list moved to `list --available`.
+- `unlink` (without `--skill`) opens a checkbox with the skills installed in
+  the project instead of requiring `--skill`.
+- Helpers `listLinkedDir` / `cliDefs.dirs()` and shell-completion support for
+  the new flags (bash/zsh/fish).
+
+### Changed
+- `import`/`scan` no longer use the numbered / `1,3` / `1-3` menus; they use a
+  checkbox. `importSkill` (internal API) returns `ImportResult[]` and
+  `SkillSelector` returns `string[]`, so several skills can be imported at once
+  (all-or-nothing).
+- `link`/`unlink`: `--project` is optional and defaults to the current
+  directory. `link` only offers skills not yet linked in the project; `unlink`
+  offers the skills installed in the project and `--skill` is optional.
+- `list` default changed from the store to the installed skills of the current
+  directory (the store is now `--available`). Pre-1.0 minor bump.
+- READMEs (EN/ES) and the `help` output updated for the new prompts, flags and
+  manifest.
+- Dependencies trimmed to `@inquirer/prompts`: removed the unused `inquirer`,
+  `@types/inquirer` and `add`, and the redundant direct `@inquirer/checkbox` /
+  `@inquirer/select` (they come with `@inquirer/prompts`).
+
 ## [0.4.0] - 2026-09-29
 
 ### Added
@@ -86,7 +121,8 @@ to a single standalone binary (`bun build --compile`).
 - GitHub Actions release workflow: 6 platform binaries
   (linux/darwin/windows × x64/arm64) on `v*` tags.
 
-[Unreleased]: https://github.com/wcervini/tabernaculo/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/wcervini/tabernaculo/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/wcervini/tabernaculo/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/wcervini/tabernaculo/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/wcervini/tabernaculo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/wcervini/tabernaculo/compare/v0.1.0...v0.2.0

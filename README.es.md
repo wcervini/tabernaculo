@@ -9,9 +9,9 @@ Escrito en **TypeScript sobre Bun**, compilado a un **binario único**. Sin depe
 ## Características
 
 - **Un solo store para todos los agent-CLIs** — la skill es genérica; el agent-CLI solo decide la carpeta destino al enlazar.
-- **`import` desde GitHub o local** — carpeta con `SKILL.md`, un `.md` suelto (se envuelve como `SKILL.md`), o un repo con varias skills (menú numerado interactivo en terminal).
+- **`import` desde GitHub o local** — carpeta con `SKILL.md`, un `.md` suelto (se envuelve como `SKILL.md`), o un repo con varias skills (checkbox interactivo en terminal; puedes importar varias a la vez).
 - **`import -D`** — importa una skill desde una carpeta local y borra esa carpeta, solo si sigue la estructura convencional (`SKILL.md` en la raíz, nombre de carpeta = `name` del frontmatter); pide confirmación en terminal.
-- **`scan`** — detecta e importa varias skills de una carpeta local a la vez, con selección `1,3`, `1-3` o `all`.
+- **`scan`** — detecta e importa varias skills de una carpeta local a la vez, con selección múltiple (checkbox) o `--all`.
 - **`link`/`unlink`** — enlaza skills a un proyecto con symlinks seguros (idempotente, `--force` para reemplazar).
 - **`config`** — apunta el store a cualquier carpeta (p. ej. `~/.skills`), o mantén el default `~/.local/tabernaculo`.
 - **Autocompletado** — bash, zsh y fish.
@@ -205,26 +205,27 @@ ok: origen borrado: /home/usuario/src/mi-skill
 
 En terminal interactiva pide confirmación antes de borrar (`s` = sí, por defecto no); sin TTY borra directamente. Si renuncias, la skill queda en el store y la carpeta se conserva (`aviso: origen conservado: …`).
 
-Un repo con varias skills abre un **menú numerado** en terminal interactiva (sin TTY mantiene el error sugiriendo `--path`):
+Un repo con varias skills abre un **checkbox** en terminal interactiva (sin TTY mantiene el error sugiriendo `--path`). Marca una o varias con espacio y confirma con enter:
 
 ```
 $ tabernaculo import --from org/multi-skill-repo
-Skills encontradas en el origen:
-  1) alpha
-  2) beta
-Elige número o nombre ('c' cancela): 2
+? Elige las skills a importar (espacio marca, enter confirma)
+❯◉ alpha
+ ◯ beta
+ok: alpha -> ~/.skills/alpha
 ok: beta -> ~/.skills/beta
 ```
+
+Las skills marcadas se importan de forma **atómica**: si una falla, no queda ninguna. Ctrl-C cancela sin importar nada.
 
 ### Importar en lote con `scan`
 
 ```
 $ tabernaculo scan --dir ~/src/skills-collection
-Skills detectadas:
-  1) drizzle [carpeta]
-  2) zod [carpeta]
-  3) my-notes [.md]
-Elige números (ej. 1,3 o 1-3, 'all' para todas, 'c' cancela): 1-2
+? Elige las skills a importar (espacio marca, enter confirma)
+❯◉ drizzle [carpeta]
+ ◉ zod [carpeta]
+ ◯ my-notes [.md]
 ok: drizzle -> ~/.skills/drizzle
 ok: zod -> ~/.skills/zod
 resumen: 2 ok, 0 fallos
@@ -238,12 +239,11 @@ tabernaculo scan --dir ~/src/skills-collection --all
 ### Enlazar skills a proyectos
 
 ```bash
-# selector interactivo si omites --skill
+# checkbox si omites --skill: solo salen las que aún NO están enlazadas
 tabernaculo link --cli opencode --project .
-# Skills disponibles:
-#   1) drizzle
-#   2) zod
-# Elige número: 1
+# ? Elige las skills a enlazar (espacio marca, enter confirma)
+# ❯◉ drizzle   cli: any
+#  ◉ zod       cli: any
 
 # la misma skill, enlazada a varios agent-CLIs
 tabernaculo link --cli claude --project ~/apps/api --skill drizzle
@@ -253,12 +253,27 @@ tabernaculo link --cli codex --legacy --project ~/apps/api --skill drizzle
 tabernaculo link --cli opencode --project . --skill drizzle --force
 ```
 
+Cada `link` deja constancia en `<destino del CLI>/.tabernaculo.json` (p. ej.
+`.opencode/skills/.tabernaculo.json`), el manifiesto con lo enlazado. Los
+symlinks siguen siendo la fuente de verdad. El selector oculta las skills que
+ya están enlazadas en ese proyecto: solo muestra las que faltan.
+
 ### Gestionar el store
 
 ```bash
-tabernaculo list                      # todo el store
-tabernaculo list --cli codex          # solo skills importadas con ese hint
+tabernaculo list                      # skills INSTALADAS en el CWD
+tabernaculo list --cli opencode       # solo las de ese agent-CLI
+tabernaculo list --project ~/apps/api # instaladas en otro proyecto
+tabernaculo list --available          # skills del store (disponibles)
+tabernaculo list --available --cli codex   # store filtrado por hint
 
+# sin --skill: checkbox con las skills INSTALADAS en el proyecto
+tabernaculo unlink --cli opencode --project .
+# ? Elige las skills a quitar (espacio marca, enter confirma)
+# ❯◉ drizzle   instalada con tabernáculo
+#  ◉ zod       symlink externo
+
+# con --skill: quita solo esa
 tabernaculo unlink --cli opencode --project . --skill drizzle
 tabernaculo remove --skill old-skill  # (alias: rm)
 ```
@@ -274,11 +289,11 @@ tabernaculo config --set ~/.skills    # persiste la ruta del store en config.jso
 
 | Comando | Descripción |
 |---|---|
-| `import` | Importa una skill desde una ruta local o GitHub. `--from` puede ser una carpeta, un `.md` suelto, un `owner/repo` o una URL; `--path <sub/dir>` para un subpath; `--ref <rama>` para una rama concreta; `--name <override>` para renombrar. En terminal, un repo con varias skills muestra un **menú numerado** (elige por número o nombre). `-D` borra la carpeta origen tras importar (carpeta local con `SKILL.md` en la raíz y nombre de carpeta = `name` del frontmatter; pide confirmación en terminal). |
-| `scan` | Detecta skills bajo `--dir` (subcarpetas con `SKILL.md`/`.md`, y `.md` sueltos) y las importa. Selección con `1,3`, `1-3` o `all`; `--all` salta la pregunta. Resume con `N ok, M fallos`. |
-| `list` | Lista las skills del store. `--cli <hint>` filtra por el hint guardado al importar. |
-| `link` | Enlaza una skill a un proyecto: `--cli <agent>`, `--project <ruta>`, `--skill <nombre>` (si omites `--skill` abre un selector interactivo). Idempotente; `--force` reemplaza links/ficheros (nunca directorios reales); `--legacy` apunta al layout antiguo de Codex. |
-| `unlink` | Quita un symlink de un proyecto (solo borra symlinks). |
+| `import` | Importa una skill desde una ruta local o GitHub. `--from` puede ser una carpeta, un `.md` suelto, un `owner/repo` o una URL; `--path <sub/dir>` para un subpath; `--ref <rama>` para una rama concreta; `--name <override>` para renombrar. En terminal, un repo con varias skills muestra un **checkbox**: marca una o varias (importación atómica) y confirma con enter. `-D` borra la carpeta origen tras importar (carpeta local con `SKILL.md` en la raíz y nombre de carpeta = `name` del frontmatter; pide confirmación en terminal). |
+| `scan` | Detecta skills bajo `--dir` (subcarpetas con `SKILL.md`/`.md`, y `.md` sueltos) y las importa. Selección múltiple con **checkbox**; `--all` salta la pregunta (obligatorio sin terminal). Resume con `N ok, M fallos`. |
+| `list` | Lista las skills **instaladas** (symlinks) en un proyecto: `--project <ruta>` (por defecto el CWD), `--cli <agent>` para uno solo o agrupadas por carpeta destino; marca enlaces rotos. Con `--available` lista el **store** (`--cli <hint>` filtra por el hint de importación). |
+| `link` | Enlaza una o varias skills a un proyecto: `--cli <agent>`, `--skill <nombre>` (si omites `--skill` abre un **checkbox** con las skills que aún NO están enlazadas). `--project <ruta>` es opcional: por defecto opera sobre el directorio actual. Registra cada enlace en `<cliDir>/.tabernaculo.json`. Idempotente; `--force` reemplaza links/ficheros (nunca directorios reales); `--legacy` apunta al layout antiguo de Codex. |
+| `unlink` | Quita symlink(s) de un proyecto. `--cli <agent>`, `--skill <nombre>` opcional: sin él abre un **checkbox** con las skills instaladas (symlinks) en el proyecto. `--project <ruta>` opcional: por defecto opera sobre el directorio actual. Solo borra symlinks; nunca ficheros ni directorios reales. Actualiza el manifiesto. |
 | `remove` | Borra una skill del store. Alias: `rm`. |
 | `clis` | Lista los agent-CLIs soportados. Alias: `supported-clis`. |
 | `config` | Muestra el store efectivo, su origen y el archivo de configuración. `--set <ruta>` escribe `config.json` (se expande `~`). |
@@ -312,6 +327,7 @@ La raíz del store se resuelve en este orden:
   2. `<store>/<nombre>` directo — cuando el propio store es un repo de skills con carpetas `SKILL.md` en la raíz (p. ej. `~/.skills`).
 - Cada skill importada lleva un `.tabernaculo.json` con metadatos (`name`, `cli` hint, `source`, `url_or_path`, `ref`, `subpath`, `imported_at`).
 - El layout legacy `skills/<cli>/<nombre>` de versiones anteriores se sigue listando y enlazando (el plano gana en conflicto de nombres).
+- `link` además registra cada enlace en `<cliDir>/.tabernaculo.json` (p. ej. `.opencode/skills/.tabernaculo.json`). Ese manifiesto es solo una referencia: los symlinks siguen siendo la fuente de verdad y se reconcilia con el sistema de archivos.
 
 ## Autocompletado
 
@@ -327,12 +343,12 @@ tabernaculo completion fish --install                                     # → 
 src/
   main.ts                  entrypoint → dispatch
   version.ts               versión leída de package.json (incrustada al compilar)
-  cmd/                     capa de comandos (root, flags, pick, scan, config, help, completion, version)
+  cmd/                     capa de comandos (root, skills, flags, pick, scan, config, help, completion, version)
   internal/
     cliDefs/               mapa agent-CLI → carpeta destino
     store/                 store, meta, list/resolve/remove
     importer/              import local y GitHub, scan, frontmatter de SKILL.md
-    linker/                link/unlink con symlinks seguros
+    linker/                link/unlink con symlinks seguros + manifiesto del proyecto
     config/                config.json + resolución del store
     fsutil/                helpers de sistema de ficheros
 ```
