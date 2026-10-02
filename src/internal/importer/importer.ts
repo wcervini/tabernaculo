@@ -21,8 +21,8 @@ export function normalizeName(s: string): string {
   return out === "" ? "skill" : out;
 }
 
-/** Callback para elegir una skill cuando el origen contiene varias. */
-export type SkillSelector = (names: string[]) => Promise<string>;
+/** Callback para elegir una o varias skills cuando el origen contiene varias. */
+export type SkillSelector = (names: string[]) => Promise<string[]>;
 
 /** Opciones de importSkill (ver la ayuda de `import`). */
 export interface ImportOptions {
@@ -36,7 +36,7 @@ export interface ImportOptions {
   ref?: string;
   /** Fuerza el nombre final en el store. */
   name?: string;
-  /** Se usa solo si el origen contiene varias skills (menú interactivo). */
+  /** Se usa solo si el origen contiene varias skills (menú interactivo; puede elegir varias). */
   select?: SkillSelector;
   /**
    * -D: exige la estructura convencional (carpeta = name del frontmatter con
@@ -58,15 +58,17 @@ export interface ImportResult {
 }
 
 /**
- * Trae una skill al store (plano, sin cli: la skill es genérica).
+ * Trae una o varias skills al store (plano, sin cli: la skill es genérica).
  * cli es opcional y solo se guarda como hint en el meta.
  * from puede ser path local o github (URL u owner/repo).
- * select se usa solo si el origen tiene varias skills (menú interactivo).
+ * select se usa solo si el origen tiene varias skills (menú interactivo;
+ * puede devolver varias y entonces se importan todas).
  * Con deleteSource (-D) solo se acepta una carpeta local con la estructura
  * convencional; si algo falla, no se importa ni se borra nada.
- * Devuelve el nombre final en el store.
+ * La importación es atómica: si una skill falla, se deshacen las anteriores
+ * del mismo origen. Devuelve un ImportResult por skill importada.
  */
-export async function importSkill(storeRoot: string, opts: ImportOptions): Promise<ImportResult> {
+export async function importSkill(storeRoot: string, opts: ImportOptions): Promise<ImportResult[]> {
   const { from, select, deleteSource = false, confirmDelete } = opts;
   const cli = opts.cli ?? "";
   const subPath = opts.subPath ?? "";
@@ -148,62 +150,79 @@ export async function importSkill(storeRoot: string, opts: ImportOptions): Promi
       }
     }
 
-    const { dir: skillSrc, wrapFirstMd } = await resolveSkillRoot(staging, select);
-
-    let name = nameOverride;
-    if (!name) {
-      // Estándar Agent Skills: la carpeta debe llamarse igual que el campo
-      // `name` del frontmatter. Si la carpeta origen trae sufijos (p. ej.
-      // hashes de otros instaladores), el frontmatter manda.
-      name = frontmatterName(skillSrc, wrapFirstMd ?? "SKILL.md");
-      if (name && !fileBase) {
-        const base = basename(skillSrc);
-        if (normalizeName(base) !== normalizeName(name)) {
-          process.stderr.write(
-            `nota: carpeta origen ${JSON.stringify(base)} != name ${JSON.stringify(name)}; usando ${JSON.stringify(normalizeName(name))}\n`,
-          );
-        }
-      }
+    const resolved = await resolveSkillRoot(staging, select);
+    if (nameOverride.trim() && resolved.length > 1) {
+      throw new Error("--name no se puede usar cuando se importan varias skills a la vez");
     }
-    if (!name) {
-      if (fileBase) {
-        name = fileBase;
-      } else if (!isDir(staging)) {
-        name = basename(staging, extname(staging));
-      } else {
-        name = basename(skillSrc);
-        if (name === "." || name === "/") name = "skill";
-      }
-    }
-    name = normalizeName(name);
 
-    const dest = skillDir(storeRoot, name);
-    if (pathExists(dest)) throw new Error(`skill ${name} ya existe en el store (usa --name otro)`);
-    mkdirSync(dirname(dest), { recursive: true });
+    const results: ImportResult[] = [];
+    const created: string[] = [];
     try {
-      copyDir(skillSrc, dest);
-      // Carpeta con .md pero sin SKILL.md: se envuelve el primer .md como SKILL.md.
-      if (wrapFirstMd) copyFile(join(skillSrc, wrapFirstMd), join(dest, "SKILL.md"));
+      for (const r of resolved) {
+        let name = nameOverride;
+        if (!name) {
+          // Estándar Agent Skills: la carpeta debe llamarse igual que el campo
+          // `name` del frontmatter. Si la carpeta origen trae sufijos (p. ej.
+          // hashes de otros instaladores), el frontmatter manda.
+          name = frontmatterName(r.dir, r.wrapFirstMd ?? "SKILL.md");
+          if (name && !fileBase) {
+            const base = basename(r.dir);
+            if (normalizeName(base) !== normalizeName(name)) {
+              process.stderr.write(
+                `nota: carpeta origen ${JSON.stringify(base)} != name ${JSON.stringify(name)}; usando ${JSON.stringify(normalizeName(name))}\n`,
+              );
+            }
+          }
+        }
+        if (!name) {
+          if (fileBase) {
+            name = fileBase;
+          } else if (!isDir(staging)) {
+            name = basename(staging, extname(staging));
+          } else {
+            name = basename(r.dir);
+            if (name === "." || name === "/") name = "skill";
+          }
+        }
+        name = normalizeName(name);
+
+        const dest = skillDir(storeRoot, name);
+        if (pathExists(dest)) throw new Error(`skill ${name} ya existe en el store (usa --name otro)`);
+        mkdirSync(dirname(dest), { recursive: true });
+        try {
+          copyDir(r.dir, dest);
+          // Carpeta con .md pero sin SKILL.md: se envuelve el primer .md como SKILL.md.
+          if (r.wrapFirstMd) copyFile(join(r.dir, r.wrapFirstMd), join(dest, "SKILL.md"));
+        } catch (e) {
+          rmSync(dest, { recursive: true, force: true });
+          throw e;
+        }
+        created.push(dest);
+
+        const meta: Meta = {
+          name,
+          cli: key || undefined,
+          source,
+          url_or_path: urlOrPath,
+          ref: ref || undefined,
+          subpath: subPath || undefined,
+          imported_at: rfc3339(new Date()),
+        };
+        saveMeta(dest, meta);
+        results.push({ name, removed: "", kept: false });
+      }
     } catch (e) {
-      rmSync(dest, { recursive: true, force: true });
+      // Atomicidad: si una skill del origen falla, no dejamos las anteriores a medias.
+      for (const d of created) rmSync(d, { recursive: true, force: true });
       throw e;
     }
 
-    const meta: Meta = {
-      name,
-      cli: key || undefined,
-      source,
-      url_or_path: urlOrPath,
-      ref: ref || undefined,
-      subpath: subPath || undefined,
-      imported_at: rfc3339(new Date()),
-    };
-    saveMeta(dest, meta);
-
-    // -D: la skill ya está copiada y con meta; ahora se borra el origen.
-    let removed = "";
-    let kept = false;
+    // -D: las skills ya están copiadas y con meta; ahora se borra el origen.
+    // Solo aplica a una carpeta local única (checkSkillFolder), así que solo
+    // puede haber un resultado.
     if (deleteTarget) {
+      let removed = "";
+      let kept = false;
       if (!pathExists(deleteTarget)) {
         kept = true; // alguien lo movió mientras importábamos
       } else if (!confirmDelete || (await confirmDelete(deleteTarget))) {
@@ -212,8 +231,9 @@ export async function importSkill(storeRoot: string, opts: ImportOptions): Promi
       } else {
         kept = true;
       }
+      results[0] = { ...results[0]!, removed, kept };
     }
-    return { name, removed, kept };
+    return results;
   } finally {
     for (const t of temps) removeAll(t);
   }
@@ -257,13 +277,13 @@ interface ResolvedSkill {
 }
 
 /**
- * Localiza la carpeta que contiene SKILL.md. Si solo hay .md sueltos,
+ * Localiza las carpetas que contienen SKILL.md. Si solo hay .md sueltos,
  * devuelve la propia staging y el primer .md para envolverlo como SKILL.md
  * (sin crear carpetas temporales intermedias). Si hay varias skills y se
- * pasa `select`, pide elegir una (menú); si no, lanza error.
+ * pasa `select`, pide elegir una o varias (checkbox); si no, lanza error.
  */
-async function resolveSkillRoot(staging: string, select?: SkillSelector): Promise<ResolvedSkill> {
-  if (pathExists(join(staging, "SKILL.md"))) return { dir: staging };
+async function resolveSkillRoot(staging: string, select?: SkillSelector): Promise<ResolvedSkill[]> {
+  if (pathExists(join(staging, "SKILL.md"))) return [{ dir: staging }];
 
   const infos = readdirSync(staging, { withFileTypes: true });
   const skillSubdirs: string[] = [];
@@ -276,13 +296,17 @@ async function resolveSkillRoot(staging: string, select?: SkillSelector): Promis
     if (ino.name.toLowerCase().endsWith(".md")) mdFiles.push(ino.name);
   }
 
-  if (skillSubdirs.length === 1) return { dir: skillSubdirs[0]! };
+  if (skillSubdirs.length === 1) return [{ dir: skillSubdirs[0]! }];
   if (skillSubdirs.length > 1) {
     const names = skillSubdirs.map((p) => basename(p)).sort();
     if (select) {
       const chosen = await select(names);
-      if (!names.includes(chosen)) throw new Error(`selección inválida: ${JSON.stringify(chosen)}`);
-      return { dir: join(staging, chosen) };
+      if (chosen.length === 0) throw new Error("no elegiste ninguna skill");
+      for (const c of chosen) {
+        if (!names.includes(c)) throw new Error(`selección inválida: ${JSON.stringify(c)}`);
+      }
+      // Preserva el orden de la lista original y sin duplicados.
+      return names.filter((n) => chosen.includes(n)).map((n) => ({ dir: join(staging, n) }));
     }
     throw new Error(
       `el repo contiene varias skills (${names.join(", ")}); usa --path <sub/dir> o ejecútalo en una terminal interactiva`,
@@ -290,7 +314,7 @@ async function resolveSkillRoot(staging: string, select?: SkillSelector): Promis
   }
   if (mdFiles.length > 0) {
     mdFiles.sort();
-    return { dir: staging, wrapFirstMd: mdFiles[0]! };
+    return [{ dir: staging, wrapFirstMd: mdFiles[0]! }];
   }
   throw new Error(`no se encontró SKILL.md ni .md en ${staging} (usa --path a la carpeta de la skill)`);
 }
